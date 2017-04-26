@@ -1,0 +1,8 @@
+*.swp
+*.log
+*.csv
+*.png, *.jpg
+data/
+/courses
+.vscode/
+.ipynb_checkpoints/

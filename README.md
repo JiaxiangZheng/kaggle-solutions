@@ -1,0 +1,1 @@
+This repo includes code for practicing kaggle, for algorithm detail please navigate to the respective directories.
