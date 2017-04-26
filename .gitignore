@@ -1,7 +1,10 @@
+*.pyc
 *.swp
 *.log
 *.csv
 *.png, *.jpg
+# ignore model file
+*.h5
 data/
 /courses
 .vscode/

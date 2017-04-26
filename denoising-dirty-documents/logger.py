@@ -12,7 +12,7 @@ handlers[1].setFormatter(formatter)
 
 def getLogger(category = 'OUTPUT', level = logging.DEBUG):
   logger = logging.getLogger(category)
-  logger.addHandler(handlers[0])
+  # logger.addHandler(handlers[0])
   logger.addHandler(handlers[1])
   logger.setLevel(level)
 

@@ -50,6 +50,15 @@ def to_range(ary):
 def from_range(ary):
     return (ary + 0.9) * 256.0/1.8
 
+def clip_from_image(source, patch_size):
+    img = PIL.Image.open(source)
+    ary = to_range(numpy.array(img))
+
+    return ary
+    # patches = patchify(enlarged_img, neighbors)
+
+    # return numpy.array(patches), ary.shape
+
 def x_from_image(source, neighbors):
     img = PIL.Image.open(source)
     ary = to_range(numpy.array(img))
