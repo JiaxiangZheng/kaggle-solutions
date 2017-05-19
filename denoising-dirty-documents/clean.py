@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import argparse
 import cPickle
-import logging
 import numpy
 import os.path
 import PIL.Image
@@ -72,6 +71,7 @@ def cleaned_path(path):
     name = os.path.basename(path)
     return os.path.join(os.path.dirname(path), '../train_cleaned', name)
 
+# just read the normalized pixel data
 def y_from_image(source, neighbors):
     output = []
 
@@ -101,21 +101,15 @@ def main():
     parser.add_argument('-o', '--output', help='Where to write the cleaned image.')
     args = parser.parse_args()
 
-    if args.verbosity == 1:
-        logger.setLevel(logging.INFO)
-    elif args.verbosity >= 2:
-        logger.setLevel(logging.DEBUG)
-
     model, params = load_model(args.model)
+    logger.info('finished loading model')
+    for image in os.listdir('./data/test'):
+        logger.info('processing image %s' % image)
+        xs, shape = x_from_image(os.path.join('./data/test', image), params['neighbors'])
+        ys = model.predict(xs)
+        img = image_from_y(ys, shape)
 
-    xs, shape = x_from_image(args.input, params['neighbors'])
-    ys = model.predict(xs)
-    img = image_from_y(ys, shape)
-
-    if args.output is not None:
-        img.convert('L').save(args.output)
-    else:
-        img.show()
+        img.convert('L').save(os.path.join('./data/test_cleaned', image))
 
     return 0
 

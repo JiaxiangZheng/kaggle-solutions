@@ -5,6 +5,7 @@ import glob
 import gzip
 import logging
 import numpy
+import random
 import PIL.Image
 import sys
 
@@ -28,8 +29,12 @@ def load_training(limit=None, neighbors=2):
         patches, _ = clean.x_from_image(path, neighbors)
         solutions = clean.y_from_image(path, neighbors)
 
-        xs.extend(patches)
-        ys.extend(solutions)
+        sample = int(len(solutions) * 0.2)
+        idx = range(len(solutions))
+        random.shuffle(idx)
+        idx = idx[:sample]
+        xs.extend(patches[idx, :])
+        ys.extend([solutions[i] for i in idx])
 
     return xs, ys
 
@@ -38,7 +43,9 @@ def load_clip_training(limit, clip_size):
     xs = []
     ys = []
 
-    for path in glob.glob('./data/train/*.png')[:limit]:
+    files = glob.glob('./data/train/*.png')
+    random.shuffle(files)
+    for path in files[:limit]:
         patches = clean.clip_from_image(path, (clip_size, clip_size))
         solutions = clean.clip_from_image(path, (clip_size, clip_size))
 
@@ -70,14 +77,15 @@ def build_cnn_model(input_shape):
 # use cleaned clips as the target
 def build_model(input_size):
     model = Sequential()
-    model.add(Dense(512, input_shape=(input_size,), activation='relu'))
-    model.add(Dense(256, activation='relu'))
-    model.add(Dense(128, activation='relu'))
-    model.add(Dense(64, activation='relu'))
+    model.add(Dense(64, input_shape=(input_size,), activation='relu'))
+    # model.add(Dense(256, activation='relu'))
+    # model.add(Dense(128, activation='relu'))
+    # model.add(Dense(64, activation='relu'))
     model.add(Dense(1, activation='relu'))
 
-    sgd = SGD(lr=0.01, momentum=0.9) # , nesterov=True)
-    model.compile(loss='mean_squared_error', optimizer=sgd)
+    model.compile(loss='mean_squared_error', optimizer='rmsprop')
+
+    model.summary()
     return model
 
 def split_training(xs, ys):
@@ -96,15 +104,13 @@ def split_training(xs, ys):
         xs[train_count:train_count+valid_count], ys[train_count:train_count+valid_count], \
         ys[train_count+valid_count:train_count+valid_count+test_count], ys[train_count+valid_count:train_count+valid_count+test_count])
 
-    # why use numpy array to convert the data???
-    # answer is that xs is a 2D array, so use numpy.array to convert to numpy object
     return [numpy.array(r) for r in res]
 
 def train(limit, neighbors, epochs, batch_size):
-    logger.info('start loading data %d %d' % (limit, neighbors))
+    logger.info('start loading data size=%d neighbors=%d' % (limit, neighbors))
     xs, ys = load_training(limit, neighbors)
     # xs, ys = load_clip_training(limit, 28)
-    logger.info('finish loading data, spliting the data')
+    logger.info('finish loading data, start to spliting the data')
 
     train_x, train_y, valid_x, valid_y, test_x, test_y = split_training(xs, ys)
     print train_x.shape, train_y.shape, valid_x.shape, valid_y.shape
@@ -112,6 +118,20 @@ def train(limit, neighbors, epochs, batch_size):
     # model = build_cnn_model(xs[0].shape)
     model = build_model(len(train_x[0]))
     logger.info('finish building the model')
+    model.fit(train_x, train_y,
+              nb_epoch=epochs,
+              batch_size=batch_size,
+              verbose=1,
+              validation_data=(valid_x, valid_y))
+
+    model.optimizer.lr *= 0.5;
+    model.fit(train_x, train_y,
+              nb_epoch=epochs,
+              batch_size=batch_size,
+              verbose=1,
+              validation_data=(valid_x, valid_y))
+
+    model.optimizer.lr *= 0.1;
     model.fit(train_x, train_y,
               nb_epoch=epochs,
               batch_size=batch_size,
@@ -145,5 +165,6 @@ def main():
 
     return 0
 
+# python train.py  --limit -1 --verbose --epochs 3 --neighbors 3 --batch-size 64 model.h5
 if __name__ == '__main__':
     sys.exit(main())

@@ -17,7 +17,7 @@ from logger import logger
 def load_test_images(limit=None, neighbors=5):
     image_specs = []
     xs = []
-    for path in glob.glob('./test/*.png')[:limit]:
+    for path in glob.glob('./data/test/*.png')[:limit]:
         image_number = os.path.basename(path)[:-len('.png')]
         patches, shape = clean.x_from_image(path, neighbors)
         image_specs.append((image_number, shape))
@@ -53,7 +53,7 @@ def dump(image_spec, imgs, output_dir):
 
 def main():
     parser = argparse.ArgumentParser(description=None)
-    parser.add_argument('-l', '--limit', help='Number of training images to load.', type=int)
+    parser.add_argument('-l', '--limit', help='Number of training images to load.', type=int, default=None)
     parser.add_argument('-v', '--verbose', action='count', dest='verbosity', help='Set verbosity.')
     parser.add_argument('model', help='Model to use.')
     parser.add_argument('output_dir', help='Where to dump solution.')

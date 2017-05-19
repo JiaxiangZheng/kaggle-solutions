@@ -14,11 +14,11 @@ def save(path, img):
 def denoise_image(inp):
     # estimate 'background' color by a median filter
     bg = signal.medfilt2d(inp, 11)
-
+    save('background.png', bg)
     # compute 'foreground' mask as anything that is significantly darker than
     # the background
     mask = inp < bg - 0.1
-
+    save('mask.png', mask)
     # return the input value for all pixels in the mask or pure white otherwise
     return np.where(mask, inp, 1.0)
 
@@ -63,4 +63,11 @@ def submit(test_dir):
   df.to_csv('submit.csv', index=False)
 
 # validate('./data/train', './data/train_cleaned')
-submit('./data/test/')
+
+# submit('./data/test/')
+
+input = load_image('./data/train/2.png')
+# input = 255.0 - input
+output = load_image('./data/train_cleaned/2.png')
+# output = 255.0 - output
+save('background.png', input - output)
